@@ -101,6 +101,98 @@ func TestGetAPIKey2(t *testing.T) {
 			wantErr:        nil,
 			wantErrMessage: "",
 		},
+		// New test cases for additional coverage
+		{
+			name: "Case Sensitive ApiKey Prefix",
+			headers: http.Header{
+				"Authorization": []string{"apikey test-key"},
+			},
+			wantAPIKey:     "",
+			wantErr:        nil,
+			wantErrMessage: "malformed authorization header",
+		},
+		{
+			name: "Multiple Spaces in Header",
+			headers: http.Header{
+				"Authorization": []string{"ApiKey    test-key"},
+			},
+			wantAPIKey:     "   test-key",
+			wantErr:        nil,
+			wantErrMessage: "",
+		},
+		{
+			name: "Only ApiKey Prefix",
+			headers: http.Header{
+				"Authorization": []string{"ApiKey"},
+			},
+			wantAPIKey:     "",
+			wantErr:        nil,
+			wantErrMessage: "malformed authorization header",
+		},
+		{
+			name: "Multiple Headers with Different Cases",
+			headers: http.Header{
+				"Authorization": []string{"ApiKey first-key"},
+				"authorization": []string{"ApiKey second-key"},
+			},
+			wantAPIKey:     "first-key",
+			wantErr:        nil,
+			wantErrMessage: "",
+		},
+		{
+			name: "Header with Newlines",
+			headers: http.Header{
+				"Authorization": []string{"ApiKey\nnewline-key"},
+			},
+			wantAPIKey:     "\nnewline-key",
+			wantErr:        nil,
+			wantErrMessage: "",
+		},
+		{
+			name: "Header with Tabs",
+			headers: http.Header{
+				"Authorization": []string{"ApiKey\t\ttab-key"},
+			},
+			wantAPIKey:     "\t\ttab-key",
+			wantErr:        nil,
+			wantErrMessage: "",
+		},
+		{
+			name: "Multiple Headers with Invalid Format",
+			headers: http.Header{
+				"Authorization": []string{"invalid", "ApiKey valid-key"},
+			},
+			wantAPIKey:     "",
+			wantErr:        nil,
+			wantErrMessage: "malformed authorization header",
+		},
+		{
+			name: "Header with Unicode Characters",
+			headers: http.Header{
+				"Authorization": []string{"ApiKey 你好世界"},
+			},
+			wantAPIKey:     "你好世界",
+			wantErr:        nil,
+			wantErrMessage: "",
+		},
+		{
+			name: "Header with Control Characters",
+			headers: http.Header{
+				"Authorization": []string{"ApiKey \x00\x01\x02\x03"},
+			},
+			wantAPIKey:     "\x00\x01\x02\x03",
+			wantErr:        nil,
+			wantErrMessage: "",
+		},
+		{
+			name: "Header with Maximum Length",
+			headers: http.Header{
+				"Authorization": []string{"ApiKey " + string(make([]byte, 8192))},
+			},
+			wantAPIKey:     string(make([]byte, 8192)),
+			wantErr:        nil,
+			wantErrMessage: "",
+		},
 	}
 
 	for _, tt := range tests {
@@ -121,4 +213,4 @@ func TestGetAPIKey2(t *testing.T) {
 			}
 		})
 	}
-} 
+}
