@@ -33,7 +33,8 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Fatal("PORT environment variable is not set")
+		port = "80"
+		log.Println("PORT environment variable is not set")
 	}
 
 	apiCfg := apiConfig{}
